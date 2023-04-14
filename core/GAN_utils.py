@@ -21,7 +21,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from PIL import Image
-from IPython.display import clear_output
 from .build_montages import build_montages, color_framed_montages
 from .torch_utils import progress_bar
 load_urls = False
@@ -298,7 +297,6 @@ class BigGAN_wrapper():#nn.Module
                 img_list = self.visualize(code_batch, truncation=truncation, ).cpu()
                 img_all = img_list if img_all is None else torch.cat((img_all, img_list), dim=0)
                 csr = csr_end
-                clear_output(wait=True)
                 progress_bar(csr_end, imgn, "ploting row of page: %d of %d" % (csr_end, imgn))
         return img_all
 
@@ -354,7 +352,6 @@ class BigBiGAN_wrapper():#nn.Module
                 img_list = self.visualize(code_batch, scale=scale, resolution=resolution).cpu()
                 img_all = img_list if img_all is None else torch.cat((img_all, img_list), dim=0)
                 csr = csr_end
-                # clear_output(wait=True)
                 # progress_bar(csr_end, imgn, "ploting row of page: %d of %d" % (csr_end, imgn))
         return img_all
 
@@ -477,7 +474,6 @@ class StyleGAN2_wrapper():#nn.Module
                                        truncation=truncation, mean_latent=mean_latent, ).cpu()
             img_all = img_list if img_all is None else torch.cat((img_all, img_list), dim=0)
             csr = csr_end
-            clear_output(wait=True)
             progress_bar(csr_end, imgn, "ploting row of page: %d of %d" % (csr_end, imgn))
         return img_all
 
@@ -562,7 +558,6 @@ class StyleGAN_wrapper():  # nn.Module
                                        resolution=resolution, mean_style=mean_style, wspace=wspace, noise=noise).cpu()
             img_all = img_list if img_all is None else torch.cat((img_all, img_list), dim=0)
             csr = csr_end
-            # clear_output(wait=True)
             # progress_bar(csr_end, imgn, "ploting row of page: %d of %d" % (csr_end, imgn))
         return img_all
 

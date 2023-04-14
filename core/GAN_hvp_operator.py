@@ -27,7 +27,6 @@ import torch
 import torch.nn.functional as F
 from hessian_eigenthings.power_iter import deflated_power_iteration
 from sklearn.cross_decomposition import CCA
-from IPython.display import clear_output
 from .lanczos_generalized import lanczos, lanczos_generalized
 from .torch_utils import progress_bar
 
@@ -81,11 +80,14 @@ class GANHVPOperator(Operator):
         else:  # By default, `criterion` is a binary distance function. 
             self.img_ref = self.model.visualize(self.code, )  # forward the feature vector through the GAN
             img_pertb = self.model.visualize(self.code + self.perturb_vec)
+            print("img_pertb:", img_pertb.shape)
+            print("self.img_ref:", self.img_ref.shape)
             d_sim = self.criterion(self.preprocess(self.img_ref), self.preprocess(img_pertb))
             # similarity metric between 2 images.
             gradient = torch.autograd.grad(d_sim, self.perturb_vec, create_graph=True, retain_graph=True)[0]
             # 1st order gradient, saved, enable 2nd order gradient. 
         self.gradient = gradient.view(-1)
+        print("gradient:", gradient.shape)
 
     def select_code(self, code):
         """ Select a (new) reference code `z` to compute Hessian at. H|_z
@@ -104,6 +106,67 @@ class GANHVPOperator(Operator):
 
     def apply(self, vec):
         """ Compute Hessian Vector Product(HVP) of `vec` using forward differencing method. 
+        Here we implement the forward difference approximation of HVP.
+              $Hv|_x = \partial_dz g(x)^Tv|_{x+dz}$
+        Input:
+            vec: Vector to product with Hessian. a torch vector of shape `[1, n]`
+
+        Returns:
+            hessian_vec_prod: H*vec where H is the hessian of the output of D, w.r.t. latent input to G.
+        """
+        self.zero_grad()
+        # take the second gradient
+        grad_grad = torch.autograd.grad(
+            self.gradient, self.perturb_vec, grad_outputs=vec, only_inputs=True, retain_graph=True
+        )
+        hessian_vec_prod = grad_grad[0].view(-1)  # torch.cat([g.view(-1) for g in grad_grad]) #.contiguous()
+        return hessian_vec_prod
+
+    def vHv_form(self, vec):
+        """ Compute Bilinear form of Hessian with `vec` using Hessian Vector Product method
+        Input:
+            vec: Vector to compute vHv. a torch vector of shape `[1, n]`
+
+        Returns:
+            vhv: a torch scalar. Bilinear form vec.T*H*vec. where H is the hessian of D output.
+        """
+        self.zero_grad()
+        # take the second gradient
+        grad_grad = torch.autograd.grad(
+            self.gradient, self.perturb_vec, grad_outputs=vec, only_inputs=True, retain_graph=True
+        )
+        hessian_vec_prod = grad_grad[0].view(-1)
+        vhv = (hessian_vec_prod * vec).sum()
+        return vhv
+
+    def zero_grad(self):
+        """
+        Zeros out the gradient info for each parameter in the model
+        """
+        for p in [self.perturb_vec]:
+            if p.grad is not None:
+                p.grad.data.zero_()
+
+
+class GANHVPOperatorEnc(Operator):
+    """ Uses backward autodifferencing to compute HVP for unary and binary D """
+    def __init__(
+            self,
+            perturb_vec,
+            gradient,
+            use_gpu=True
+    ):
+        if use_gpu:
+            device = "cuda"
+        else:
+            device = "cpu"
+        self.device = device
+        self.perturb_vec = perturb_vec
+        self.gradient = gradient.view(-1)
+        self.size = self.perturb_vec.numel()  # n, the input dimension to generator, i.e. latent space dimension.
+
+    def apply(self, vec):
+        """ Compute Hessian Vector Product(HVP) of `vec` using forward differencing method.
         Here we implement the forward difference approximation of HVP.
               $Hv|_x = \partial_dz g(x)^Tv|_{x+dz}$
         Input:
@@ -389,7 +452,6 @@ def get_full_hessian(loss, param):
     hessian = torch.zeros(hessian_size, hessian_size)
     loss_grad = torch.autograd.grad(loss, param, create_graph=True, retain_graph=True, only_inputs=True)[0].view(-1)
     for idx in range(hessian_size):
-        clear_output(wait = True)
         progress_bar(
             idx, hessian_size, "full hessian columns: %d of %d" % (idx, hessian_size)
         )

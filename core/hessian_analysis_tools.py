@@ -81,7 +81,9 @@ def plot_spectra(eigval_col, savename="spectrum_all", figdir="", abs=True, media
     if median: eigmean = np.nanmedian(eigval_col, axis=0)
     else: eigmean = np.nanmean(eigval_col, axis=0)
     eiglim = np.percentile(eigval_col, [5, 95], axis=0)
+    print("eiglim:", eiglim.shape)
     sortIdx = np.argsort(-np.abs(eigmean))
+    print("sortIdx:", sortIdx.shape)
     eigmean = eigmean[sortIdx]
     eiglim = eiglim[:, sortIdx]
     eigN = len(eigmean)
@@ -106,7 +108,7 @@ def plot_spectra(eigval_col, savename="spectrum_all", figdir="", abs=True, media
                       "median as curve" if median else "mean as curve"))
     if save:
         plt.savefig(join(figdir, savename+".png"), bbox_extra_artists=[st]) # this is working.
-        plt.savefig(join(figdir, savename+".pdf"), bbox_extra_artists=[st])  # this is working.
+        # plt.savefig(join(figdir, savename+".pdf"), bbox_extra_artists=[st])  # this is working.
     # plt.show()
     return fig
 #%%
