@@ -7,7 +7,7 @@ python FA_model_Hessian_Axes.py \
   --masked_head_name "BinaryHeadV2" \
   --emotion_head_name "EACHead_eval_hm" \
   --emotion_value_head_name "BinaryHeadV4" \
-  --pretrain_model "../../Face_Attribute/train_log/checkpoints_Age_Gender_Masked_Emotion_v9_kpca/Resnet50_EAC_best_test_value.pt" \
+  --pretrain_model "../Face_Attribute/train_log/checkpoints_Age_Gender_Masked_Emotion_v9_kpca/Resnet50_EAC_best_test_value.pt" \
   --feat_dim 2048 \
   --att_size 4 \
   --mean 0.485 0.456 0.406 \

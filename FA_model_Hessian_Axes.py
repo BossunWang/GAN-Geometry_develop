@@ -12,7 +12,7 @@ import os
 import sys
 import cv2
 
-sys.path.append("../../Face_Attribute")
+sys.path.append("../Face_Attribute")
 
 from resnet_from_EAC import EAC_FULL_Model
 from core import get_full_hessian, hessian_compute_enc, save_imgrid, show_imgrid, plot_spectra
@@ -63,7 +63,7 @@ def main(args):
         = getHead(args, feat_dim, age_num_classes, gender_num_classes, masked_num_classes, emotion_num_classes)
     backbone = getModel(args, feat_dim, age_num_classes, gender_num_classes, masked_num_classes, emotion_num_classes)
 
-    save_folder = "../../Face_Attribute/utils/Analysis_v9/Happy_resample"
+    save_folder = "../Face_Attribute/utils/Analysis_v9/Happy_resample"
     K_fit_rows = np.load(os.path.join(save_folder, "K_fit_rows.npy"))
     K_fit_all = np.load(os.path.join(save_folder, "K_fit_all.npy"))
     X_fit = np.load(os.path.join(save_folder, "X_fit.npy"))
